@@ -1,0 +1,17 @@
+name: Cleanup
+on: workflow_dispatch
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - name: Remove instance profile from AWS_GOAT_ROLE
+        run: |
+          for p in $(aws iam list-instance-profiles-for-role --role-name AWS_GOAT_ROLE --query "InstanceProfiles[].InstanceProfileName" --output text); do
+            echo "Removing instance profile: $p"
+            aws iam remove-role-from-instance-profile --instance-profile-name "$p" --role-name AWS_GOAT_ROLE
+            aws iam delete-instance-profile --instance-profile-name "$p"
+          done
